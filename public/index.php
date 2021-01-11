@@ -28,20 +28,25 @@ $app->add(new Tuupola\Middleware\HttpBasicAuthentication([
 */
 $app->post('/createuser', function(Request $request, Response $response){
 
-    if(!haveEmptyParameters(array('email', 'password', 'name', 'school'), $request, $response)){
-
+    if(!haveEmptyParameters(array('balance', 'username', 'password', 'name', 'address', 'idcard', 'passconfirm', 'phone'), $request, $response)){
+        
         $request_data = $request->getParsedBody(); 
 
-        $email = $request_data['email'];
+        $balance = $request_data['balance'];
+        $username = $request_data['username'];
         $password = $request_data['password'];
         $name = $request_data['name'];
-        $school = $request_data['school']; 
+        $address = $request_data['address'];
+        $idcard = $request_data['idcard'];
+        $passconfirm = $request_data['passconfirm'];
+        $phone = $request_data['phone'];
+        // $status = $request_data['status']; 
 
         $hash_password = password_hash($password, PASSWORD_DEFAULT);
 
         $db = new DbOperations; 
 
-        $result = $db->createUser($email, $hash_password, $name, $school);
+        $result = $db->createUser($balance, $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, '');
         
         if($result == USER_CREATED){
 
@@ -86,19 +91,19 @@ $app->post('/createuser', function(Request $request, Response $response){
 
 $app->post('/userlogin', function(Request $request, Response $response){
 
-    if(!haveEmptyParameters(array('email', 'password'), $request, $response)){
+    if(!haveEmptyParameters(array('username', 'password'), $request, $response)){
         $request_data = $request->getParsedBody(); 
 
-        $email = $request_data['email'];
+        $username = $request_data['username'];
         $password = $request_data['password'];
         
         $db = new DbOperations; 
 
-        $result = $db->userLogin($email, $password);
+        $result = $db->userLogin($username, $password);
 
         if($result == USER_AUTHENTICATED){
             
-            $user = $db->getUserByEmail($email);
+            $user = $db->getUserByEmail($username);
             $response_data = array();
 
             $response_data['error']=false; 

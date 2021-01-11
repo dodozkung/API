@@ -3,17 +3,17 @@
     class DbOperations{
 
         private $con; 
-
+    
         function __construct(){
             require_once dirname(__FILE__) . '/DbConnect.php';
             $db = new DbConnect; 
             $this->con = $db->connect(); 
         }
 
-        public function createUser($email, $password, $name, $school){
-           if(!$this->isEmailExist($email)){
-                $stmt = $this->con->prepare("INSERT INTO users (email, password, name, school) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("ssss", $email, $password, $name, $school);
+        public function createUser($balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
+           if(!$this->isEmailExist($username)){
+                $stmt = $this->con->prepare("INSERT INTO members (balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'P')");
+                $stmt->bind_param("ssssssss", $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone);
                 if($stmt->execute()){
                     return USER_CREATED; 
                 }else{
@@ -23,9 +23,9 @@
            return USER_EXISTS; 
         }
 
-        public function userLogin($email, $password){
-            if($this->isEmailExist($email)){
-                $hashed_password = $this->getUsersPasswordByEmail($email); 
+        public function userLogin($username, $password){
+            if($this->isEmailExist($username)){
+                $hashed_password = $this->getUsersPasswordByEmail($username); 
                 if(password_verify($password, $hashed_password)){
                     return USER_AUTHENTICATED;
                 }else{
@@ -36,9 +36,9 @@
             }
         }
 
-        private function getUsersPasswordByEmail($email){
-            $stmt = $this->con->prepare("SELECT password FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
+        private function getUsersPasswordByEmail($username){
+            $stmt = $this->con->prepare("SELECT password FROM members WHERE username = ?");
+            $stmt->bind_param("s", $username);
             $stmt->execute(); 
             $stmt->bind_result($password);
             $stmt->fetch(); 
@@ -61,17 +61,21 @@
             return $users; 
         }
 
-        public function getUserByEmail($email){
-            $stmt = $this->con->prepare("SELECT id, email, name, school FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
+        public function getUserByEmail($username){
+            $stmt = $this->con->prepare("SELECT wallet_id, balance, username, name, idcard, passconfirm, phone, status FROM members WHERE username = ?");
+            $stmt->bind_param("s", $username);
             $stmt->execute(); 
-            $stmt->bind_result($id, $email, $name, $school);
+            $stmt->bind_result($wallet_id, $balance, $username, $name, $idcard, $passconfirm, $phone, $status);
             $stmt->fetch(); 
             $user = array(); 
-            $user['id'] = $id; 
-            $user['email']=$email; 
-            $user['name'] = $name; 
-            $user['school'] = $school; 
+            $user['wallet_id'] = $wallet_id; 
+            $user['balance']=$balance; 
+            $user['username'] = $username; 
+            $user['name'] = $name;
+            $user['idcard'] = $idcard;
+            $user['passconfirm'] = $passconfirm;
+            $user['phone'] = $phone; 
+            $user['status'] = $status;
             return $user; 
         }
 
@@ -109,9 +113,9 @@
             return false; 
         }
 
-        private function isEmailExist($email){
-            $stmt = $this->con->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
+        private function isEmailExist($username){
+            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE username = ?");
+            $stmt->bind_param("s", $username);
             $stmt->execute(); 
             $stmt->store_result(); 
             return $stmt->num_rows > 0;  
