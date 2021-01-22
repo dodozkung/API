@@ -28,11 +28,11 @@ $app->add(new Tuupola\Middleware\HttpBasicAuthentication([
 */
 $app->post('/createuser', function(Request $request, Response $response){
 
-    if(!haveEmptyParameters(array('balance', 'username', 'password', 'name', 'address', 'idcard', 'passconfirm', 'phone'), $request, $response)){
+    if(!haveEmptyParameters(array('username', 'password', 'name', 'address', 'idcard', 'passconfirm', 'phone'), $request, $response)){
         
         $request_data = $request->getParsedBody(); 
 
-        $balance = $request_data['balance'];
+        // $balance = $request_data['balance'];
         $username = $request_data['username'];
         $password = $request_data['password'];
         $name = $request_data['name'];
@@ -46,7 +46,7 @@ $app->post('/createuser', function(Request $request, Response $response){
 
         $db = new DbOperations; 
 
-        $result = $db->createUser($balance, $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, '');
+        $result = $db->createUser('0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, '');
         
         if($result == USER_CREATED){
 
@@ -108,7 +108,7 @@ $app->post('/userlogin', function(Request $request, Response $response){
 
             $response_data['error']=false; 
             $response_data['message'] = 'Login Successful';
-            $response_data['user']=$user; 
+            $response_data['user']=$user; // $request_data[user].user[wal]
 
             $response->write(json_encode($response_data));
 
@@ -303,6 +303,103 @@ function haveEmptyParameters($required_params, $request, $response){
     }
     return $error; 
 }
+
+$app->post('/getDataUser', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+
+    $db = new DbOperations; 
+
+    $users = $db->getDataUser($wallet_id);
+
+
+    $response_data = array();
+
+    $response_data['error'] = false; 
+    $response_data['users'] = $users; 
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
+    }
+
+});
+
+$app->post('/SeachUser', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+
+    $db = new DbOperations; 
+
+    $users = $db->Search2Data($wallet_id,"SELECT name,balance FROM members WHERE wallet_id = ?");
+
+
+    $response_data = array();
+
+    $response_data['error'] = false; 
+    // $response_data['message'] = 'WalletID not Found'; 
+    $response_data['users'] = $users; 
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
+
+
+    }
+
+});
+
+$app->post('/Transfer', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id','EndAccID','Amout'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+        $EndAccID = $request_data['EndAccID'];
+        $Amout = $request_data['Amout'];
+
+    $db = new DbOperations; 
+
+    $users = $db->Transfer((int)$wallet_id,(int)$EndAccID,(float)$Amout);
+
+
+    $response_data = array();
+
+    //$response_data['error'] = false; 
+    
+    
+    $response_data['users'] = $users; 
+
+    if($response_data['users']){
+        $response_data['message'] = 'Success'; 
+    }else{
+        $response_data['message'] = 'Fail'; 
+    }
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
+
+
+    }
+
+});
+
 
 $app->run();
 

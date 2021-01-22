@@ -12,8 +12,8 @@
 
         public function createUser($balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
            if(!$this->isEmailExist($username)){
-                $stmt = $this->con->prepare("INSERT INTO members (balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'P')");
-                $stmt->bind_param("ssssssss", $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone);
+                $stmt = $this->con->prepare("INSERT INTO members (balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ('0.00', ?, ?, ?, ?, ?, ?, ?, 'P')");
+                $stmt->bind_param("sssssss", $username, $password, $name, $address, $idcard, $passconfirm, $phone);
                 if($stmt->execute()){
                     return USER_CREATED; 
                 }else{
@@ -119,5 +119,77 @@
             $stmt->execute(); 
             $stmt->store_result(); 
             return $stmt->num_rows > 0;  
+        }
+
+        public function getDataUser($userid){
+            $stmt = $this->con->prepare("SELECT balance, name, idcard, status FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("i", $userid);
+            $stmt->execute(); 
+            $stmt->bind_result($balance, $name, $idcard, $status);
+            $stmt->fetch(); 
+            $user = array();  
+            $user['balance']=$balance; 
+            $user['name'] = $name;
+            $user['idcard'] = $idcard;
+            $user['status'] = $status;
+            return $user; 
+        }
+
+        public function SeachUser($userid){
+            $stmt = $this->con->prepare("SELECT name FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("i", $userid);
+            $stmt->execute(); 
+            $stmt->bind_result( $name);
+            $stmt->fetch();  //กระจายข้อมูลจาก db ให้อยู่ในรูปแบบ array
+            $result = array();  
+            $result['result'] = $name;
+            return $user; 
+        }
+
+        public function UpdateData($value1,$value2,$sql){
+            $stmt = $this->con->prepare($sql);
+            $stmt->bind_param("di", $value2,$value1);
+            $stmt->execute();
+               
+        }
+        public function SearchData($value1,$sql){
+            $stmt = $this->con->prepare($sql);
+            $stmt->bind_param("i", $value1);
+            $stmt->execute();
+            $stmt->bind_result($data);
+            $stmt->fetch();  //กระจายข้อมูลจาก db ให้อยู่ในรูปแบบ array
+            return $data;
+        }
+        public function Search2Data($value1,$sql){ // "is"
+            $stmt = $this->con->prepare($sql);
+            $stmt->bind_param("i", $value1);
+            $stmt->execute();
+            $stmt->bind_result($data1,$data2);
+            $stmt->fetch();  //กระจายข้อมูลจาก db ให้อยู่ในรูปแบบ array
+            $result = array();  
+            $result['result1'] = $data1;
+            $result['result2'] = $data2;
+            return $result;
+        }
+
+        public function Transfer($wallet_id,$EndAccID,$Amout){
+            $cantransfer = false; // เช็คโอนได้ไหม
+            (float)$oldBalance_UserTranfor = $this->SearchData($wallet_id,"select balance from members where wallet_id = ?");
+            (float)$oldBalance_UserReceive = $this->SearchData($EndAccID,"select balance from members where wallet_id = ?");
+
+            
+
+            if((float)$oldBalance_UserTranfor >= (float)$Amout){
+                $cantransfer = true;
+            }
+            if($cantransfer){
+                $this->UpdateData($wallet_id,(float)$oldBalance_UserTranfor-(float)$Amout,"UPDATE members SET balance= ?  WHERE wallet_id = ?");
+                $this->UpdateData($EndAccID,(float)$oldBalance_UserReceive+(float)$Amout,"UPDATE members SET balance= ?  WHERE wallet_id = ?");
+            }
+            
+            return $cantransfer;
+
+
+
         }
     }
