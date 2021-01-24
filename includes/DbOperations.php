@@ -121,9 +121,9 @@
             return $stmt->num_rows > 0;  
         }
 
-        public function getDataUser($userid){
+        public function getDataUser($wallet_id){
             $stmt = $this->con->prepare("SELECT balance, name, idcard, status FROM members WHERE wallet_id = ?");
-            $stmt->bind_param("i", $userid);
+            $stmt->bind_param("i", $wallet_id);
             $stmt->execute(); 
             $stmt->bind_result($balance, $name, $idcard, $status);
             $stmt->fetch(); 
@@ -135,16 +135,20 @@
             return $user; 
         }
 
-        public function SeachUser($userid){
+        public function SeachUser($wallet_id){
             $stmt = $this->con->prepare("SELECT name FROM members WHERE wallet_id = ?");
-            $stmt->bind_param("i", $userid);
+            $stmt->bind_param("i", $wallet_id);
             $stmt->execute(); 
-            $stmt->bind_result( $name);
-            $stmt->fetch();  //กระจายข้อมูลจาก db ให้อยู่ในรูปแบบ array
-            $result = array();  
-            $result['result'] = $name;
+            $stmt->bind_result($name);
+            $stmt->fetch(); 
+            $user = array();  
+            // $user['balance']=$balance; 
+            $user['name1'] = $name;
+            // $user['idcard2'] = $idcard;
+            // $user['status'] = $status;
             return $user; 
         }
+        
 
         public function UpdateData($value1,$value2,$sql){
             $stmt = $this->con->prepare($sql);

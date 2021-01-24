@@ -313,13 +313,13 @@ $app->post('/getDataUser', function(Request $request, Response $response){
 
     $db = new DbOperations; 
 
-    $users = $db->getDataUser($wallet_id);
+    $user = $db->getDataUser($wallet_id);
 
 
     $response_data = array();
 
     $response_data['error'] = false; 
-    $response_data['users'] = $users; 
+    $response_data['user'] = $user; 
 
     $response->write(json_encode($response_data));
 
@@ -340,14 +340,13 @@ $app->post('/SeachUser', function(Request $request, Response $response){
 
     $db = new DbOperations; 
 
-    $users = $db->Search2Data($wallet_id,"SELECT name,balance FROM members WHERE wallet_id = ?");
+    $user = $db->SeachUser($wallet_id);
 
 
-    $response_data = array();
+    // $response_data = array();
 
     $response_data['error'] = false; 
-    // $response_data['message'] = 'WalletID not Found'; 
-    $response_data['users'] = $users; 
+    $response_data['user'] = $user; 
 
     $response->write(json_encode($response_data));
 
@@ -355,8 +354,6 @@ $app->post('/SeachUser', function(Request $request, Response $response){
     ->withHeader('Content-type', 'application/json')
     ->withStatus(200);  
     
-
-
     }
 
 });
@@ -380,9 +377,9 @@ $app->post('/Transfer', function(Request $request, Response $response){
     //$response_data['error'] = false; 
     
     
-    $response_data['users'] = $users; 
+    $response_data['user'] = $user; 
 
-    if($response_data['users']){
+    if($response_data['user']){
         $response_data['message'] = 'Success'; 
     }else{
         $response_data['message'] = 'Fail'; 
