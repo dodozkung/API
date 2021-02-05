@@ -17,4 +17,6 @@
     define('PASSWORD_DO_NOT_MATCH', 302);
     define('PASSWORD_NOT_CHANGED', 303);
 
+    define('TransitionTrue', 401);
+    define('TransitionFalse', 402);
     

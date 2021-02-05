@@ -46,7 +46,11 @@ $app->post('/createuser', function(Request $request, Response $response){
 
         $db = new DbOperations; 
 
-        $result = $db->createUser('0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, '');
+        $id = $db->GenID();
+
+        
+
+        $result = $db->createUser($id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'P');
         
         if($result == USER_CREATED){
 
@@ -344,19 +348,79 @@ $app->post('/SeachUser', function(Request $request, Response $response){
 
 
     // $response_data = array();
+    if($user != false){
 
-    $response_data['error'] = false; 
+    $response_data['error'] = true; 
+    $response_data['message'] = 'Success'; 
     $response_data['user'] = $user; 
 
     $response->write(json_encode($response_data));
 
     return $response
     ->withHeader('Content-type', 'application/json')
-    ->withStatus(200);  
+    ->withStatus(200); 
+}else{
+    $response_data['error'] = false; 
+    $response_data['message'] = 'Fail'; 
+    $response_data['user'] = $user;
+     
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200); 
+} 
     
     }
 
 });
+
+// $app->post('/SeachUser', function(Request $request, Response $response){
+
+//     if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
+//         $request_data = $request->getParsedBody(); 
+
+//         $wallet_id = $request_data['wallet_id'];
+
+//     $db = new DbOperations; 
+
+//     $result = $db->chSeachUser($wallet_id);
+
+//         if($result == WIDFOUND){
+            
+//             $user = $db->SeachUser($wallet_id);
+//             // $response_data = array();
+
+//             $response_data['error']=false; 
+//             // $response_data['message'] = 'Login Successful';
+//             $response_data['user']=$user; // $request_data[user].user[wal]
+
+//             $response->write(json_encode($response_data));
+
+//             return $response
+//                 ->withHeader('Content-type', 'application/json')
+//                 ->withStatus(200);    
+
+//         }else($result == WIDNOTFOUND){
+//             $response_data = array();
+
+//             $response_data['error']=true; 
+//             // $response_data['message'] = 'User not exist';
+
+//             $response->write(json_encode($response_data));
+
+//             return $response
+//                 ->withHeader('Content-type', 'application/json')
+//                 ->withStatus(200);    
+
+//         }
+//     }
+
+//     return $response
+//         ->withHeader('Content-type', 'application/json')
+//         ->withStatus(422);    
+// });
 
 $app->post('/Transfer', function(Request $request, Response $response){
 
@@ -371,17 +435,16 @@ $app->post('/Transfer', function(Request $request, Response $response){
 
     $users = $db->Transfer((int)$wallet_id,(int)$EndAccID,(float)$Amout);
 
+    if($users = true){
+    $asd = $db->TransitionT($wallet_id, date("Y-m-d H:i:s") , 'Transfer' , $Amout, $EndAccID);
 
     $response_data = array();
 
-    //$response_data['error'] = false; 
-    
-    
-    $response_data['user'] = $user; 
-
-    if($response_data['user']){
-        $response_data['message'] = 'Success'; 
-    }else{
+    $response_data['error'] = false; 
+    $response_data['message'] = 'Success'; 
+    $response_data['user'] = $users; 
+    }
+    else{
         $response_data['message'] = 'Fail'; 
     }
 
@@ -396,6 +459,125 @@ $app->post('/Transfer', function(Request $request, Response $response){
     }
 
 });
+
+$app->post('/TransferQR', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id','EndAccID','Amout'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+        $EndAccID = $request_data['EndAccID'];
+        $Amout = $request_data['Amout'];
+
+    $db = new DbOperations; 
+
+    $users = $db->Transfer((int)$wallet_id,(int)$EndAccID,(float)$Amout);
+
+    if($users = true){
+    $asd = $db->TransitionT($wallet_id, date("Y-m-d H:i:s") , 'Pay' , $Amout, $EndAccID);
+
+    $response_data = array();
+
+    $response_data['error'] = false; 
+    $response_data['message'] = 'Success'; 
+    $response_data['user'] = $users; 
+    }
+    else{
+        $response_data['message'] = 'Fail'; 
+    }
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
+
+
+    }
+
+});
+
+
+
+// $app->post('/testid', function(Request $request, Response $response){
+
+//     if(!haveEmptyParameters(array('id'), $request, $response)){
+//         $request_data = $request->getParsedBody(); 
+
+//         $id = $request_data['id'];
+
+//     $db = new DbOperations; 
+
+//     $user = $db->checkid($id);
+
+
+//     // $response_data = array();
+//     if($user)
+
+//     $response_data['error'] = false; 
+//     $response_data['user'] = $user; 
+
+//     $response->write(json_encode($response_data));
+
+//     return $response
+//     ->withHeader('Content-type', 'application/json')
+//     ->withStatus(200);  
+    
+//     }
+
+// });
+
+// $app->post('/TransitionT', function(Request $request, Response $response){
+
+//     if(!haveEmptyParameters(array('wallet_id', 'Amount', 'EndAccID'), $request, $response)){
+        
+//         $request_data = $request->getParsedBody(); 
+
+//         $wallet_id = $request_data['wallet_id'];
+//         // $password = $request_data['password'];
+//         // $Typetransfer = $request_data['Typetransfer'];
+//         $Amount = $request_data['Amount'];
+//         $EndAccID = $request_data['EndAccID'];
+
+//         $db = new DbOperations; 
+
+//         $result = $db->TransitionT($wallet_id, date("Y-m-d H:i:s") , 'Transfer' , $Amount, $EndAccID);
+        
+//         if($result == TransitionTrue){
+            
+
+//             $message = array(); 
+//             $message['error'] = true; 
+//             // $message['user'] = $result; 
+//             $message['message'] = 'ทำรายการสำเร็จ';
+            
+
+//             $response->write(json_encode($message));
+
+//             return $response
+//                         ->withHeader('Content-type', 'application/json')
+//                         ->withStatus(201);
+
+//         }else {
+
+//             $message = array(); 
+//             $message['error'] = false; 
+//             $message['message'] = 'ทำรายการไม่สำเร็จ';
+//             $response_data['user'] = false; 
+
+//             $response->write(json_encode($message));
+
+//             return $response
+//                         ->withHeader('Content-type', 'application/json')
+//                         ->withStatus(422);    
+
+//         }
+//     }
+//     return $response
+//         ->withHeader('Content-type', 'application/json')
+//         ->withStatus(422);    
+// });
 
 
 $app->run();

@@ -1,6 +1,9 @@
 <?php 
 
+    
+
     class DbOperations{
+
 
         private $con; 
     
@@ -10,10 +13,11 @@
             $this->con = $db->connect(); 
         }
 
-        public function createUser($balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
-           if(!$this->isEmailExist($username)){
-                $stmt = $this->con->prepare("INSERT INTO members (balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ('0.00', ?, ?, ?, ?, ?, ?, ?, 'P')");
-                $stmt->bind_param("sssssss", $username, $password, $name, $address, $idcard, $passconfirm, $phone);
+        public function createUser($id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
+            
+           if(!$this->isEmailExist($username) && !$this->checkid($id)){
+                $stmt = $this->con->prepare("INSERT INTO members (id , balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssssss",$id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status);
                 if($stmt->execute()){
                     return USER_CREATED; 
                 }else{
@@ -22,6 +26,8 @@
            }
            return USER_EXISTS; 
         }
+
+    
 
         public function userLogin($username, $password){
             if($this->isEmailExist($username)){
@@ -136,6 +142,7 @@
         }
 
         public function SeachUser($wallet_id){
+            $torf = false;
             $stmt = $this->con->prepare("SELECT name FROM members WHERE wallet_id = ?");
             $stmt->bind_param("i", $wallet_id);
             $stmt->execute(); 
@@ -143,11 +150,47 @@
             $stmt->fetch(); 
             $user = array();  
             // $user['balance']=$balance; 
+            if($name != null){
+
             $user['name1'] = $name;
+
+            return $user;
+        }else{
+            $user = false;
+            return $user; 
+
+        }
             // $user['idcard2'] = $idcard;
             // $user['status'] = $status;
-            return $user; 
         }
+
+        // public function chSeachUser($wallet_id){
+        //     if($this->SeachUser($wallet_id)){
+        //         $WID = $this->SeachUser($wallet_id); 
+        //         if($WID = $wallet_id){
+        //             return WIDFOUND;
+        //         }else{
+        //             return WIDNOTFOUND; 
+        //         }
+        //     }else{
+        //         return USER_NOT_FOUND; 
+        //     }
+        // }
+        
+
+        // private function chwalletid($wallet_id){
+        //     $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
+        //     $stmt->bind_param("i", $wallet_id);
+        //     $stmt->execute(); 
+        //     $stmt->bind_result($name);
+        //     $stmt->fetch(); 
+        //     $user = array();  
+        //     // $user['balance']=$balance; 
+        //     $user['name1'] = $name;
+        //     // $user['idcard2'] = $idcard;
+        //     // $user['status'] = $status;
+        //     return $user; 
+        // }
         
 
         public function UpdateData($value1,$value2,$sql){
@@ -193,7 +236,70 @@
             
             return $cantransfer;
 
-
-
         }
+
+        public function TransitionT($wallet_id, $Data , $Typetransfer, $Amount, $EndAccID){
+            $stmt = $this->con->prepare("INSERT INTO transition (wallet_id, Date, Typetransfer, Amount, EndAccID) VALUES (?, NOW(), ?, ?, ?)");
+            $stmt->bind_param("ssss", $wallet_id , $Typetransfer, $Amount, $EndAccID);
+            $stmt->execute();
+            // if($stmt->execute()){
+            //     return TransitionTrue; 
+            // }else{
+            //     return TransitionFalse;
+            // }
+        }
+
+        public function checkPassCon($wallet_id){
+            $stmt = $this->con->prepare("SELECT name FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("i", $wallet_id);
+            $stmt->execute(); 
+            $stmt->bind_result($name);
+            $stmt->fetch(); 
+            $user = array();  
+            // $user['balance']=$balance; 
+            $user['name1'] = $name;
+            // $user['idcard2'] = $idcard;
+            // $user['status'] = $status;
+            return $user; 
+        }
+
+        public function GenID(){   
+
+            $count = 1;
+            
+            while(true){
+
+                
+                $a = '00000' . strval($count);
+                
+                // if($count == 99999){
+                //     break;
+                    
+                // }
+                $id = $a;
+                if($this->checkid($id) == $a){
+                    $count++;
+                }else{
+                    //เก็บข้อมูล
+                    
+                   
+                    return $a ;
+                    break;
+
+                }
+            
+                
+        }
+    }
+
+        
+
+        private function checkid($id){
+            $stmt = $this->con->prepare("SELECT id FROM members WHERE id = ?");
+            $stmt->bind_param("s", $id);
+            $stmt->execute(); 
+            $stmt->store_result(); 
+            return $stmt->num_rows > 0;  
+        }
+
     }
