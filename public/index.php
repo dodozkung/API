@@ -46,11 +46,11 @@ $app->post('/createuser', function(Request $request, Response $response){
 
         $db = new DbOperations; 
 
-        $id = $db->GenID();
+        $wallet_id = $db->GenID();
 
         
 
-        $result = $db->createUser($id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'P');
+        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'P');
         
         if($result == USER_CREATED){
 

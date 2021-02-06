@@ -13,11 +13,11 @@
             $this->con = $db->connect(); 
         }
 
-        public function createUser($id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
+        public function createUser($wallet_id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
             
-           if(!$this->isEmailExist($username) && !$this->checkid($id)){
-                $stmt = $this->con->prepare("INSERT INTO members (id , balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssssss",$id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status);
+           if(!$this->isEmailExist($username) && !$this->checkid($wallet_id)){
+                $stmt = $this->con->prepare("INSERT INTO members (wallet_id , balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssssss",$wallet_id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status);
                 if($stmt->execute()){
                     return USER_CREATED; 
                 }else{
@@ -68,12 +68,13 @@
         }
 
         public function getUserByEmail($username){
-            $stmt = $this->con->prepare("SELECT wallet_id, balance, username, name, idcard, passconfirm, phone, status FROM members WHERE username = ?");
+            $stmt = $this->con->prepare("SELECT N_ID, wallet_id, balance, username, name, idcard, passconfirm, phone, status FROM members WHERE username = ?");
             $stmt->bind_param("s", $username);
             $stmt->execute(); 
-            $stmt->bind_result($wallet_id, $balance, $username, $name, $idcard, $passconfirm, $phone, $status);
+            $stmt->bind_result($N_ID, $wallet_id, $balance, $username, $name, $idcard, $passconfirm, $phone, $status);
             $stmt->fetch(); 
             $user = array(); 
+            $user['N_ID'] = $N_ID; 
             $user['wallet_id'] = $wallet_id; 
             $user['balance']=$balance; 
             $user['username'] = $username; 
@@ -276,8 +277,8 @@
                 //     break;
                     
                 // }
-                $id = $a;
-                if($this->checkid($id) == $a){
+                $wallet_id = $a;
+                if($this->checkid($wallet_id) == $a){
                     $count++;
                 }else{
                     //เก็บข้อมูล
@@ -294,9 +295,9 @@
 
         
 
-        private function checkid($id){
-            $stmt = $this->con->prepare("SELECT id FROM members WHERE id = ?");
-            $stmt->bind_param("s", $id);
+        private function checkid($wallet_id){
+            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("s", $wallet_id);
             $stmt->execute(); 
             $stmt->store_result(); 
             return $stmt->num_rows > 0;  
