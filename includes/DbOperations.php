@@ -13,11 +13,11 @@
             $this->con = $db->connect(); 
         }
 
-        public function createUser($wallet_id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status){
+        public function createUser($wallet_id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status, $status2){
             
            if(!$this->isEmailExist($username) && !$this->checkid($wallet_id)){
-                $stmt = $this->con->prepare("INSERT INTO members (wallet_id , balance, username, password, name, address, idcard, passconfirm, phone, status) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssssss",$wallet_id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status);
+                $stmt = $this->con->prepare("INSERT INTO members (wallet_id , balance, username, password, name, address, idcard, passconfirm, phone, status, status2) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssssssss",$wallet_id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status, $status2);
                 if($stmt->execute()){
                     return USER_CREATED; 
                 }else{
@@ -240,7 +240,7 @@
         }
 
         public function TransitionT($wallet_id, $Data , $Typetransfer, $Amount, $EndAccID){
-            $stmt = $this->con->prepare("INSERT INTO transition (wallet_id, Date, Typetransfer, Amount, EndAccID) VALUES (?, NOW(), ?, ?, ?)");
+            $stmt = $this->con->prepare("INSERT INTO transactions (wallet_id, Date, Typetransfer, Amount, EndAccID) VALUES (?, NOW(), ?, ?, ?)");
             $stmt->bind_param("ssss", $wallet_id , $Typetransfer, $Amount, $EndAccID);
             $stmt->execute();
             // if($stmt->execute()){
@@ -301,6 +301,25 @@
             $stmt->execute(); 
             $stmt->store_result(); 
             return $stmt->num_rows > 0;  
+        }
+
+        public function Report($wallet_id){
+            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = ?");
+            $stmt->bind_param("i", $wallet_id);
+            $stmt->execute(); 
+            $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
+            $user = array();  
+            while($stmt->fetch()){
+                $temp = array();
+                $temp['wallet_id'] = $wallet_id; 
+                $temp['N_ID'] = $N_ID; 
+                $temp['Date'] = $Date; 
+                $temp['Typetransfer'] = $Typetransfer; 
+                $temp['Amount'] = $Amount; 
+                $temp['EndAccID'] = $EndAccID; 
+                array_push($user, $temp);
+                }
+            return $user;
         }
 
     }

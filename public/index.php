@@ -50,7 +50,7 @@ $app->post('/createuser', function(Request $request, Response $response){
 
         
 
-        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'P');
+        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'user','on');
         
         if($result == USER_CREATED){
 
@@ -494,6 +494,33 @@ $app->post('/TransferQR', function(Request $request, Response $response){
     
 
 
+    }
+
+});
+
+$app->get('/Report', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+
+    $db = new DbOperations; 
+
+    $user = $db->Report($wallet_id);
+
+
+    // $response_data = array();
+
+    // $response_data['error'] = false; 
+    $response_data['user'] = $user; 
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
     }
 
 });
