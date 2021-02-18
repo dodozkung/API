@@ -112,9 +112,9 @@
             }
         }
 
-        public function deleteUser($id){
-            $stmt = $this->con->prepare("DELETE FROM users WHERE id = ?");
-            $stmt->bind_param("i", $id);
+        public function deleteUser($wallet_id){
+            $stmt = $this->con->prepare("DELETE FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("i", $wallet_id);
             if($stmt->execute())
                 return true; 
             return false; 
@@ -303,7 +303,27 @@
             return $stmt->num_rows > 0;  
         }
 
-        public function Report($wallet_id){
+        public function Report(){
+            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = 000001");
+            // $stmt->bind_param("i", $wallet_id);
+            $stmt->execute(); 
+            $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
+            $user = array();  
+            while($stmt->fetch()){
+                $temp = array();
+                $temp['wallet_id'] = $wallet_id; 
+                $temp['N_ID'] = $N_ID; 
+                $temp['Date'] = $Date; 
+                $temp['Typetransfer'] = $Typetransfer; 
+                $temp['Amount'] = $Amount; 
+                $temp['EndAccID'] = $EndAccID; 
+                array_push($user, $temp);
+                }
+            return $user;
+
+        }
+
+        public function Reportip($wallet_id){
             $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = ?");
             $stmt->bind_param("i", $wallet_id);
             $stmt->execute(); 
@@ -320,6 +340,7 @@
                 array_push($user, $temp);
                 }
             return $user;
+
         }
 
     }

@@ -74,7 +74,7 @@ $app->post('/createuser', function(Request $request, Response $response){
 
             return $response
                         ->withHeader('Content-type', 'application/json')
-                        ->withStatus(422);    
+                        ->withStatus(201);    
 
         }else if($result == USER_EXISTS){
             $message = array(); 
@@ -85,7 +85,7 @@ $app->post('/createuser', function(Request $request, Response $response){
 
             return $response
                         ->withHeader('Content-type', 'application/json')
-                        ->withStatus(422);    
+                        ->withStatus(201);    
         }
     }
     return $response
@@ -266,13 +266,13 @@ $app->put('/updatepassword', function(Request $request, Response $response){
 });
 
 $app->delete('/deleteuser/{id}', function(Request $request, Response $response, array $args){
-    $id = $args['id'];
+    $wallet_id = $args['id'];
 
     $db = new DbOperations; 
 
     $response_data = array();
 
-    if($db->deleteUser($id)){
+    if($db->deleteUser($wallet_id)){
         $response_data['error'] = false; 
         $response_data['message'] = 'User has been deleted';    
     }else{
@@ -498,7 +498,40 @@ $app->post('/TransferQR', function(Request $request, Response $response){
 
 });
 
-$app->get('/Report', function(Request $request, Response $response){
+$app->get('/Report', function(Request $request, Response $response ,array $args){
+
+    // $wallet_id = $args['id'];
+
+    // if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
+        // $request_data = $request->getParsedBody(); 
+
+        // $wallet_id = $request_data['wallet_id'];
+
+    $db = new DbOperations; 
+
+    $user = $db->Report();
+
+
+    // $response_data = array();
+
+    // $response_data['error'] = false; 
+    // $response_data['user'] = $user; 
+    $response_data = $user; 
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    
+    // }
+
+}
+);
+
+$app->post('/Reportip', function(Request $request, Response $response ,array $args){
+
+    // $wallet_id = $args['id'];
 
     if(!haveEmptyParameters(array('wallet_id'), $request, $response)){
         $request_data = $request->getParsedBody(); 
@@ -507,13 +540,14 @@ $app->get('/Report', function(Request $request, Response $response){
 
     $db = new DbOperations; 
 
-    $user = $db->Report($wallet_id);
+    $user = $db->Report();
 
 
     // $response_data = array();
 
     // $response_data['error'] = false; 
-    $response_data['user'] = $user; 
+    // $response_data['user'] = $user; 
+    $response_data = $user; 
 
     $response->write(json_encode($response_data));
 
@@ -521,9 +555,11 @@ $app->get('/Report', function(Request $request, Response $response){
     ->withHeader('Content-type', 'application/json')
     ->withStatus(200);  
     
-    }
+    // }
 
-});
+}
+}
+);
 
 
 
