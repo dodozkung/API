@@ -22,27 +22,29 @@
  }
  
  //creating a query
- $stmt = $conn->prepare("SELECT `wallet_id`, `N_ID`, `Date`, `Typetransfer`, `Amount`, `EndAccID` FROM transition WHERE wallet_id = 20;");
+ $stmt = $conn->prepare("SELECT MAX(wallet_id) AS wallet_id FROM members");
  
  //executing the query 
  $stmt->execute();
  
  //binding results to the query 
- $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
+ $stmt->bind_result($wallet_id);
  
- $products = array(); 
+ echo $stmt->bind_result($wallet_id);
+ 
+ //$products = array(); 
  
  //traversing through all the result 
- while($stmt->fetch()){
- $temp = array();
- $temp['wallet_id'] = $wallet_id; 
- $temp['N_ID'] = $N_ID; 
- $temp['Date'] = $Date; 
- $temp['Typetransfer'] = $Typetransfer; 
- $temp['Amount'] = $Amount; 
- $temp['EndAccID'] = $EndAccID; 
- array_push($products, $temp);
- }
+ //while($stmt->fetch()){
+ //$temp = array();
+ //$temp = $wallet_id; 
+ //$temp['N_ID'] = $N_ID; 
+ //$temp['Date'] = $Date; 
+ //$temp['Typetransfer'] = $Typetransfer; 
+ //$temp['Amount'] = $Amount; 
+ //$temp['EndAccID'] = $EndAccID; 
+ //array_push($products, $temp);
+ //}
  
  //displaying the result in json format 
- echo json_encode($products);
+ //echo json_encode($temp);

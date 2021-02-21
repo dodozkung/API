@@ -47,7 +47,10 @@ $app->post('/createuser', function(Request $request, Response $response){
         $db = new DbOperations; 
 
         $wallet_id = $db->GenID();
-
+        if ($wallet_id == '000000'){
+            $result = $db->createUser($wallet_id ,'0.00', 'admin', '$2y$10$.l6pXvqtAovr/JK46RY5U.f87JxqYkZX6q2bpxpIzRzj.kB9TwER.', 'ภัทรพล รอดเดช', '1624/5', '1234567890123', '000000', '0642428663', 'admin','on');
+            $wallet_id = "000001";
+        }
         
 
         $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'user','on');
@@ -56,6 +59,7 @@ $app->post('/createuser', function(Request $request, Response $response){
 
             $message = array(); 
             $message['error'] = false; 
+            $message['Text'] = $wallet_id;
             $message['message'] = 'User created successfully';
 
             $response->write(json_encode($message));
@@ -540,7 +544,7 @@ $app->post('/Reportip', function(Request $request, Response $response ,array $ar
 
     $db = new DbOperations; 
 
-    $user = $db->Report();
+    $user = $db->Reportip($wallet_id);
 
 
     // $response_data = array();
@@ -555,10 +559,122 @@ $app->post('/Reportip', function(Request $request, Response $response ,array $ar
     ->withHeader('Content-type', 'application/json')
     ->withStatus(200);  
     
-    // }
 
 }
 }
+);
+
+$app->post('/Reportdw', function(Request $request, Response $response ,array $args){
+
+    // $wallet_id = $args['id'];
+
+    if(!haveEmptyParameters(array('EndAccID'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $EndAccID = $request_data['EndAccID'];
+
+
+    $db = new DbOperations; 
+
+    $user1 = $db->Reportdw($EndAccID);
+
+
+    // $response_data = array();
+
+    // $response_data['error'] = false; 
+    // $response_data['user'] = $user; 
+    $response_data = $user1; 
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    }
+}
+);
+
+$app->post('/Reportsum', function(Request $request, Response $response ,array $args){
+
+    // $wallet_id = $args['id'];
+
+    if(!haveEmptyParameters(array('wallet_id','EndAccID'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id =  $request_data['wallet_id'];
+        $EndAccID = $request_data['EndAccID'];
+
+
+    $db = new DbOperations; 
+
+    $user = $db->Reportip($wallet_id);
+    $user1 = $db->Reportdw($EndAccID);
+
+    
+
+    $count = 0;
+    for($i = 0; $i < count($user);$i++){
+        $usersum[$count] = $user[$i];
+        $count++;
+    }
+    for($i = 0; $i < count($user1);$i++){
+        $usersum[$count] = $user1[$i];
+        $count++;
+    }
+
+    // $abhg = sort($usersum,"compareByTimeStamp");
+    
+    $response_data = $usersum; 
+
+    // $response_data = $user1; 
+
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    }
+}
+
+
+
+);
+
+$app->post('/Reporttest', function(Request $request, Response $response ,array $args){
+
+    // $wallet_id = $args['id'];
+
+    if(!haveEmptyParameters(array('wallet_id','EndAccID'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id =  $request_data['wallet_id'];
+        $EndAccID = $request_data['EndAccID'];
+
+
+    $db = new DbOperations; 
+
+    $user = $db->Reporttest($wallet_id,$EndAccID);
+    
+
+
+    // $abhg = sort($usersum,"compareByTimeStamp");
+    
+    $response_data = $user; 
+
+    // $response_data = $user1; 
+
+
+    $response->write(json_encode($response_data));
+
+    return $response
+    ->withHeader('Content-type', 'application/json')
+    ->withStatus(200);  
+    }
+}
+
+
+
 );
 
 

@@ -15,7 +15,7 @@
 
         public function createUser($wallet_id ,$balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status, $status2){
             
-           if(!$this->isEmailExist($username) && !$this->checkid($wallet_id)){
+           if(!$this->isEmailExist($username)){
                 $stmt = $this->con->prepare("INSERT INTO members (wallet_id , balance, username, password, name, address, idcard, passconfirm, phone, status, status2) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssssssssss",$wallet_id, $balance, $username, $password, $name, $address, $idcard, $passconfirm, $phone, $status, $status2);
                 if($stmt->execute()){
@@ -68,10 +68,10 @@
         }
 
         public function getUserByEmail($username){
-            $stmt = $this->con->prepare("SELECT N_ID, wallet_id, balance, username, name, idcard, passconfirm, phone, status FROM members WHERE username = ?");
+            $stmt = $this->con->prepare("SELECT N_ID, wallet_id, balance, username, name, idcard, passconfirm, phone, status, status2 FROM members WHERE username = ?");
             $stmt->bind_param("s", $username);
             $stmt->execute(); 
-            $stmt->bind_result($N_ID, $wallet_id, $balance, $username, $name, $idcard, $passconfirm, $phone, $status);
+            $stmt->bind_result($N_ID, $wallet_id, $balance, $username, $name, $idcard, $passconfirm, $phone, $status, $status2);
             $stmt->fetch(); 
             $user = array(); 
             $user['N_ID'] = $N_ID; 
@@ -83,6 +83,7 @@
             $user['passconfirm'] = $passconfirm;
             $user['phone'] = $phone; 
             $user['status'] = $status;
+            $user['status2'] = $status2;
             return $user; 
         }
 
@@ -266,41 +267,39 @@
 
         public function GenID(){   
 
-            $count = 1;
-            
-            while(true){
-
-                
-                $a = '00000' . strval($count);
-                
-                // if($count == 99999){
-                //     break;
-                    
-                // }
-                $wallet_id = $a;
-                if($this->checkid($wallet_id) == $a){
-                    $count++;
-                }else{
-                    //เก็บข้อมูล
-                    
-                   
-                    return $a ;
-                    break;
-
+            $stmt = $this->con->prepare("SELECT MAX(wallet_id) AS id FROM members");
+            $stmt->execute(); 
+            $stmt->bind_result($id);
+            $stmt->fetch(); 
+            $user = array();  
+            $user['id']=$id; 
+            //return $Test;
+            if($user['id'] != ''){
+                $count = $user['id'];
+                $b = (int)$count;
+                $x = $b + 1;
+                $c = strval($x);
+                for($i = 0;$i<6;$i++){ 
+                    if(strlen($c) < 6){
+                        $c = '0' . $c;
+                    }
                 }
+                return $c;
+            }else{
+                return '000000';
+            }
+              
             
                 
-        }
+        
     }
 
         
 
-        private function checkid($wallet_id){
-            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
-            $stmt->bind_param("s", $wallet_id);
+        public function getlastid(){
+            $stmt = $this->con->prepare("SELECT MAX(wallet_id) AS wallet_id FROM members");
             $stmt->execute(); 
-            $stmt->store_result(); 
-            return $stmt->num_rows > 0;  
+            return $stmt->bind_result($wallet_id);
         }
 
         public function Report(){
@@ -324,7 +323,7 @@
         }
 
         public function Reportip($wallet_id){
-            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = ?");
+            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = ?" );
             $stmt->bind_param("i", $wallet_id);
             $stmt->execute(); 
             $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
@@ -342,5 +341,56 @@
             return $user;
 
         }
+
+        public function Reporttest($wallet_id,$EndAccID){
+            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE wallet_id = ? or EndAccID = ? order by N_ID DESC " );
+            $stmt->bind_param("ii", $wallet_id,$EndAccID);
+            $stmt->execute(); 
+            $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
+            $user = array();  
+            while($stmt->fetch()){
+                $temp = array();
+                $temp['wallet_id'] = $wallet_id; 
+                $temp['N_ID'] = $N_ID; 
+                $temp['Date'] = $Date; 
+                $temp['Typetransfer'] = $Typetransfer; 
+                $temp['Amount'] = $Amount; 
+                $temp['EndAccID'] = $EndAccID; 
+                array_push($user, $temp);
+                }
+            return $user;
+
+        }
+
+        public function Reportdw($EndAccID){
+            $stmt = $this->con->prepare("SELECT wallet_id ,N_ID ,Date ,Typetransfer ,Amount , EndAccID FROM transactions WHERE EndAccID = ?  and Typetransfer in ('withdraw','deposit')  ");
+            $stmt->bind_param("i",$EndAccID);
+            $stmt->execute(); 
+            $stmt->bind_result($wallet_id, $N_ID, $Date, $Typetransfer, $Amount, $EndAccID);
+            $user = array();  
+            while($stmt->fetch()){
+                $temp = array();
+                $temp['wallet_id'] = $wallet_id; 
+                $temp['N_ID'] = $N_ID; 
+                $temp['Date'] = $Date; 
+                $temp['Typetransfer'] = $Typetransfer;
+                $temp['Amount'] = $Amount; 
+                $temp['EndAccID'] = $EndAccID; 
+                array_push($user, $temp);
+                }
+            return $user;
+
+        }
+
+        function compareByTimeStamp($time1, $time2) 
+{ 
+    if (strtotime($time1) < strtotime($time2)) 
+        return 1; 
+    else if (strtotime($time1) > strtotime($time2))  
+        return -1; 
+    else
+        return 0; 
+} 
+  
 
     }
