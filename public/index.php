@@ -43,6 +43,7 @@ $app->post('/createuser', function(Request $request, Response $response){
         // $status = $request_data['status']; 
 
         $hash_password = password_hash($password, PASSWORD_DEFAULT);
+        $hash_passwordcon = password_hash($passconfirm, PASSWORD_DEFAULT);
 
         $db = new DbOperations; 
 
@@ -53,7 +54,79 @@ $app->post('/createuser', function(Request $request, Response $response){
         }
         
 
-        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $passconfirm, $phone, 'user','on');
+        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $hash_passwordcon, $phone, 'user','on');
+        
+        if($result == USER_CREATED){
+
+            $message = array(); 
+            $message['error'] = false; 
+            $message['Text'] = $wallet_id;
+            $message['message'] = 'User created successfully';
+
+            $response->write(json_encode($message));
+
+            return $response
+                        ->withHeader('Content-type', 'application/json')
+                        ->withStatus(201);
+
+        }else if($result == USER_FAILURE){
+
+            $message = array(); 
+            $message['error'] = true; 
+            $message['message'] = 'Some error occurred';
+
+            $response->write(json_encode($message));
+
+            return $response
+                        ->withHeader('Content-type', 'application/json')
+                        ->withStatus(201);    
+
+        }else if($result == USER_EXISTS){
+            $message = array(); 
+            $message['error'] = true; 
+            $message['message'] = 'User Already Exists';
+
+            $response->write(json_encode($message));
+
+            return $response
+                        ->withHeader('Content-type', 'application/json')
+                        ->withStatus(201);    
+        }
+    }
+    return $response
+        ->withHeader('Content-type', 'application/json')
+        ->withStatus(422);    
+});
+
+$app->post('/createshop', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('username', 'password', 'name', 'address', 'idcard', 'passconfirm', 'phone'), $request, $response)){
+        
+        $request_data = $request->getParsedBody(); 
+
+        // $balance = $request_data['balance'];
+        $username = $request_data['username'];
+        $password = $request_data['password'];
+        $name = $request_data['name'];
+        $address = $request_data['address'];
+        $idcard = $request_data['idcard'];
+        $passconfirm = $request_data['passconfirm'];
+        $phone = $request_data['phone'];
+        // $status = $request_data['status']; 
+
+        $hash_password = password_hash($password, PASSWORD_DEFAULT);
+        $hash_passwordcon = password_hash($passconfirm, PASSWORD_DEFAULT);
+
+        $db = new DbOperations; 
+
+        $wallet_id = $db->GenID();
+        if ($wallet_id == '000000'){
+            $result = $db->createUser($wallet_id ,'0.00', 'admin', '$2y$10$.l6pXvqtAovr/JK46RY5U.f87JxqYkZX6q2bpxpIzRzj.kB9TwER.', 'ภัทรพล รอดเดช', '1624/5', '1234567890123', '000000', '0642428663', 'admin','on');
+            $wallet_id = "000001";
+        }
+        
+
+        $result = $db->createUser($wallet_id ,'0.00', $username, $hash_password, $name, $address, $idcard, $hash_passwordcon, $phone, 'shop','on');
         
         if($result == USER_CREATED){
 
@@ -117,6 +190,63 @@ $app->post('/userlogin', function(Request $request, Response $response){
             $response_data['error']=false; 
             $response_data['message'] = 'Login Successful';
             $response_data['user']=$user; // $request_data[user].user[wal]
+
+            $response->write(json_encode($response_data));
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);    
+
+        }else if($result == USER_NOT_FOUND){
+            $response_data = array();
+
+            $response_data['error']=true; 
+            $response_data['message'] = 'User not exist';
+
+            $response->write(json_encode($response_data));
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);    
+
+        }else if($result == USER_PASSWORD_DO_NOT_MATCH){
+            $response_data = array();
+
+            $response_data['error']=true; 
+            $response_data['message'] = 'Invalid credential';
+
+            $response->write(json_encode($response_data));
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);  
+        }
+    }
+
+    return $response
+        ->withHeader('Content-type', 'application/json')
+        ->withStatus(422);    
+});
+
+$app->post('/checkpasscon', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('wallet_id', 'passwordcon'), $request, $response)){
+        $request_data = $request->getParsedBody(); 
+
+        $wallet_id = $request_data['wallet_id'];
+        $passwordcon = $request_data['passwordcon'];
+        
+        $db = new DbOperations; 
+
+        $result = $db->checkPassConfirm($wallet_id, $passwordcon);
+
+        if($result == USER_AUTHENTICATED){
+            
+            $response_data = array();
+
+            $response_data['error']=false; 
+            $response_data['message'] = 'Login Successful';
+            $response_data['user']="true"; // $request_data[user].user[wal]
 
             $response->write(json_encode($response_data));
 

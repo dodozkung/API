@@ -51,6 +51,39 @@
             return $password; 
         }
 
+
+        public function checkPassConfirm($wallet_id, $passwordcon){
+            if($this->isWalletidExist($wallet_id)){
+                $hashed_password = $this->getUsersPasswordConByEmail($wallet_id); 
+                if(password_verify($passwordcon, $hashed_password)){
+                    return USER_AUTHENTICATED;
+                }else{
+                    return USER_PASSWORD_DO_NOT_MATCH; 
+                }
+            }else{
+                return USER_NOT_FOUND; 
+            }
+        }
+
+
+
+        private function getUsersPasswordConByEmail($wallet_id){
+            $stmt = $this->con->prepare("SELECT passconfirm FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("s", $wallet_id);
+            $stmt->execute(); 
+            $stmt->bind_result($passwordcon);
+            $stmt->fetch(); 
+            return $passwordcon; 
+        }
+
+        private function isWalletidExist($wallet_id){
+            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("s", $wallet_id);
+            $stmt->execute(); 
+            $stmt->store_result(); 
+            return $stmt->num_rows > 0;  
+        }
+
         public function getAllUsers(){
             $stmt = $this->con->prepare("SELECT id, email, name, school FROM users;");
             $stmt->execute(); 
