@@ -158,7 +158,7 @@ private function isWalletidExist($wallet_id){
 
         public function rePassword($hash_newpassword , $idcard){
                 $stmt = $this->con->prepare("UPDATE members SET password = ? WHERE idcard = ?");
-                $stmt->bind_param("si",$hash_newpassword , $idcard);
+                $stmt->bind_param("ss",$hash_newpassword , $idcard);
                 $stmt->execute();
                 return true;
         }
