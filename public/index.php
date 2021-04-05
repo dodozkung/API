@@ -355,42 +355,101 @@ $app->put('/updateuser/{id}', function(Request $request, Response $response, arr
 
 });
 
-$app->put('/updatepassword', function(Request $request, Response $response){
+$app->post('/checkpassidcard', function(Request $request, Response $response){
 
-    if(!haveEmptyParameters(array('currentpassword', 'newpassword', 'email'), $request, $response)){
+    if(!haveEmptyParameters(array('idcard'), $request, $response)){
         
         $request_data = $request->getParsedBody(); 
 
-        $currentpassword = $request_data['currentpassword'];
-        $newpassword = $request_data['newpassword'];
-        $email = $request_data['email']; 
+        $idcard = $request_data['idcard'];
+        
 
         $db = new DbOperations; 
 
-        $result = $db->updatePassword($currentpassword, $newpassword, $email);
+        $result = $db->fotgetpassword($idcard);
+        
+        if($result == USER_AUTHENTICATED){
+            
+            $response_data = array();
 
-        if($result == PASSWORD_CHANGED){
-            $response_data = array(); 
-            $response_data['error'] = false;
-            $response_data['message'] = 'Password Changed';
-            $response->write(json_encode($response_data));
-            return $response->withHeader('Content-type', 'application/json')
-                            ->withStatus(200);
+            $response_data['error']=false; 
+            $response_data['message'] = 'IDcard Successful';
+            // $response_data['user']="true"; 
+            // $request_data[user].user[wal]
 
-        }else if($result == PASSWORD_DO_NOT_MATCH){
-            $response_data = array(); 
-            $response_data['error'] = true;
-            $response_data['message'] = 'You have given wrong password';
             $response->write(json_encode($response_data));
-            return $response->withHeader('Content-type', 'application/json')
-                            ->withStatus(200);
-        }else if($result == PASSWORD_NOT_CHANGED){
-            $response_data = array(); 
-            $response_data['error'] = true;
-            $response_data['message'] = 'Some error occurred';
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);    
+
+        }else if($result == USER_NOT_FOUND){
+            $response_data = array();
+
+            $response_data['error']=true; 
+            $response_data['message'] = 'IDcard not exist';
+
             $response->write(json_encode($response_data));
-            return $response->withHeader('Content-type', 'application/json')
-                            ->withStatus(200);
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);    
+
+        }else if($result == USER_PASSWORD_DO_NOT_MATCH){
+            $response_data = array();
+
+            $response_data['error']=true; 
+            $response_data['message'] = 'Invalid credential';
+
+            $response->write(json_encode($response_data));
+
+            return $response
+                ->withHeader('Content-type', 'application/json')
+                ->withStatus(200);  
+        }     
+    }
+    return $response
+        ->withHeader('Content-type', 'application/json')
+        ->withStatus(422);    
+});
+
+
+$app->put('/rePassword', function(Request $request, Response $response){
+
+    if(!haveEmptyParameters(array('newpassword', 'idcard'), $request, $response)){
+        
+        $request_data = $request->getParsedBody(); 
+
+        $newpassword = $request_data['newpassword'];
+        $idcard = $request_data['idcard']; 
+
+        $db = new DbOperations; 
+
+        $hash_newpassword = password_hash($newpassword, PASSWORD_DEFAULT);
+        
+
+        $result = $db->rePassword($hash_newpassword, $idcard);
+
+        if($result == true){
+
+            $response_data['error'] = false; 
+            $response_data['message'] = 'Success';  
+        
+            $response->write(json_encode($response_data));
+        
+            return $response
+            ->withHeader('Content-type', 'application/json')
+            ->withStatus(200); 
+
+        }else {
+            $response_data['error'] = true; 
+            $response_data['message'] = 'dont Success';  
+        
+            $response->write(json_encode($response_data));
+        
+            return $response
+            ->withHeader('Content-type', 'application/json')
+            ->withStatus(200); 
         }
     }
 
@@ -398,6 +457,7 @@ $app->put('/updatepassword', function(Request $request, Response $response){
         ->withHeader('Content-type', 'application/json')
         ->withStatus(422);  
 });
+
 
 $app->delete('/deleteuser/{id}', function(Request $request, Response $response, array $args){
     $wallet_id = $args['id'];

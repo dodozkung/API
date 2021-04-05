@@ -65,7 +65,13 @@
             }
         }
 
-
+private function isWalletidExist($wallet_id){
+            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
+            $stmt->bind_param("s", $wallet_id);
+            $stmt->execute(); 
+            $stmt->store_result(); 
+            return $stmt->num_rows > 0;  
+        }
 
         private function getUsersPasswordConByEmail($wallet_id){
             $stmt = $this->con->prepare("SELECT passconfirm FROM members WHERE wallet_id = ?");
@@ -76,12 +82,34 @@
             return $passwordcon; 
         }
 
-        private function isWalletidExist($wallet_id){
-            $stmt = $this->con->prepare("SELECT wallet_id FROM members WHERE wallet_id = ?");
-            $stmt->bind_param("s", $wallet_id);
+        public function fotgetpassword($idcard){
+            if($this->isidcardExist($idcard)){
+                $checkidcard = $this->getUsersPasswordConByIdcard($idcard); 
+                if($idcard == $checkidcard){
+                    return USER_AUTHENTICATED;
+                }else{
+                    return USER_PASSWORD_DO_NOT_MATCH; 
+                }
+            }else{
+                return USER_NOT_FOUND; 
+            }
+        }
+
+        private function isidcardExist($idcard){
+            $stmt = $this->con->prepare("SELECT idcard FROM members WHERE idcard = ?");
+            $stmt->bind_param("s", $idcard);
             $stmt->execute(); 
             $stmt->store_result(); 
             return $stmt->num_rows > 0;  
+        }
+
+        public function getUsersPasswordConByIdcard($idcard){
+            $stmt = $this->con->prepare("SELECT idcard FROM members WHERE idcard = ?");
+            $stmt->bind_param("s", $idcard);
+            $stmt->execute(); 
+            $stmt->bind_result($idcard);
+            $stmt->fetch();
+            return $idcard; 
         }
 
         public function getAllUsers(){
@@ -128,23 +156,30 @@
             return false; 
         }
 
-        public function updatePassword($currentpassword, $newpassword, $email){
-            $hashed_password = $this->getUsersPasswordByEmail($email);
-            
-            if(password_verify($currentpassword, $hashed_password)){
-                
-                $hash_password = password_hash($newpassword, PASSWORD_DEFAULT);
-                $stmt = $this->con->prepare("UPDATE users SET password = ? WHERE email = ?");
-                $stmt->bind_param("ss",$hash_password, $email);
-
-                if($stmt->execute())
-                    return PASSWORD_CHANGED;
-                return PASSWORD_NOT_CHANGED;
-
-            }else{
-                return PASSWORD_DO_NOT_MATCH; 
-            }
+        public function rePassword($hash_newpassword , $idcard){
+                $stmt = $this->con->prepare("UPDATE members SET password = ? WHERE idcard = ?");
+                $stmt->bind_param("si",$hash_newpassword , $idcard);
+                $stmt->execute();
+                return true;
         }
+
+        // public function updatePassword($currentpassword, $newpassword, $email){
+        //     $hashed_password = $this->getUsersPasswordByEmail($email);
+            
+        //     if(password_verify($currentpassword, $hashed_password)){
+                
+        //         $hash_password = password_hash($newpassword, PASSWORD_DEFAULT);
+        //         $stmt = $this->con->prepare("UPDATE users SET password = ? WHERE email = ?");
+        //         $stmt->bind_param("ss",$hash_password, $email);
+
+        //         if($stmt->execute())
+        //             return PASSWORD_CHANGED;
+        //         return PASSWORD_NOT_CHANGED;
+
+        //     }else{
+        //         return PASSWORD_DO_NOT_MATCH; 
+        //     }
+        // }
 
         public function deleteUser($wallet_id){
             $stmt = $this->con->prepare("DELETE FROM members WHERE wallet_id = ?");
@@ -234,6 +269,7 @@
             $stmt->execute();
                
         }
+
         public function SearchData($value1,$sql){
             $stmt = $this->con->prepare($sql);
             $stmt->bind_param("i", $value1);
